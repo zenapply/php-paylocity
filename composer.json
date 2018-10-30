@@ -15,7 +15,7 @@
     ],
     "autoload":{
         "psr-4":{
-            "Zenapply\\HRIS\\Paylocity\\":"src/"
+            "Zenapply\\HRIS\\Paylocity\\": "src/"
         }
     },
     "autoload-dev": {
@@ -28,7 +28,6 @@
         "guzzlehttp/guzzle": "^6.3",
         "php": "^5.5.9|^7.0",
         "sainsburys/guzzle-oauth2-plugin": "^3.0",
-        "zenapply/common": "^1.0",
         "phpseclib/phpseclib": "^2.0"
     },
     "require-dev": {
