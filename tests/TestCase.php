@@ -2,9 +2,9 @@
 
 namespace Zenapply\HRIS\Paylocity\Tests;
 
-use Orchestra\Testbench\TestCase as Orchestra;
+use PHPUnit\Framework\TestCase as PHPUnitTestCase;
 
-class TestCase extends Orchestra
+class TestCase extends PHPUnitTestCase
 {
     /**
      * Setup the test environment.

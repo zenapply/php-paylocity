@@ -5,48 +5,82 @@ namespace Zenapply\HRIS\Paylocity;
 use Exception;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\BadResponseException;
+use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Response;
-use Zenapply\Common\Exceptions\ZenapplyException;
+use Sainsburys\Guzzle\Oauth2\GrantType\ClientCredentials;
+use Sainsburys\Guzzle\Oauth2\GrantType\RefreshToken;
+use Sainsburys\Guzzle\Oauth2\Middleware\OAuthMiddleware;
 
 class Paylocity
 {
+    const VERSION_1 = 'v1';
+    const VERSION_2 = 'v2';
+    const SANDBOX_URL = "apisandbox.paylocity.com";
+    const PRODUCTION_URL = "api.paylocity.com";
+
     protected $api_key;
     protected $base_uri;
     protected $client;
     protected $resource;
+    protected $version;
 
-    public function __construct($api_key, $host = "api.paylocity.com", $secure = true)
+    public function __construct($client_id, $client_secret, $public_key_path, $host = self::PRODUCTION_URL, $version = self::VERSION_2)
     {
-        $protocol = $secure ? "https" : "http";
-        $this->api_key = $api_key;
-        $this->base_uri = "{$protocol}://{$host}/api/v2/";
-        $this->client = new Client([
-            "base_uri" => $this->base_uri,
-            "timeout" => 30,
-            "headers" => [
-                'Accept' => 'application/json',
-                'Authorization' => 'Bearer ' . $this->api_key,
-                'X-Requested-With' => 'XMLHttpRequest',
-            ]
+        $base = 'https://'.$host;
+        $this->version = $version;
+        $config = [
+            ClientCredentials::CONFIG_CLIENT_ID => $client_id,
+            ClientCredentials::CONFIG_CLIENT_SECRET  => $client_secret,
+            ClientCredentials::CONFIG_TOKEN_URL => '/IdentityServer/connect/token',
+            'scope' => 'WebLinkAPI',
+        ];
+
+        $oauthClient = new Client([
+            'base_uri' => $base,
+            'verify' => false
         ]);
+        $grantType = new ClientCredentials($oauthClient, $config);
+        $refreshToken = new RefreshToken($oauthClient, $config);
+        $middleware = new OAuthMiddleware($oauthClient, $grantType, $refreshToken);
+
+        $handlerStack = HandlerStack::create();
+        $handlerStack->push($middleware->onBefore());
+        $handlerStack->push($middleware->onFailure(5));
+
+        $this->client = new Client([
+            'handler'=> $handlerStack,
+            'base_uri' => "{$base}/api/{$this->version}/",
+            'auth' => 'oauth2',
+            'verify' => false,
+            'headers' => [ 'Content-Type' => 'application/json' ]
+        ]);
+        $this->resource = [];
+        $this->public_key_path = $public_key_path;
     }
 
     public function __get($name)
     {
-        $this->resource = $name;
-
+        $this->resource[] = $name;
         return $this;
     }
 
-    public function get($id)
+    public function __call($method, $args)
     {
-        $uri = "{$this->resource}/{$id}";
-        return $this->request('GET', $uri);
+        $this->resource[] = $method;
+        foreach($args as $arg) {
+            $this->resource[] = $arg;
+        }
+        return $this;
+    }
+
+    public function get(array $search = null)
+    {
+        return $this->all($search);
     }
 
     public function all(array $search = null)
     {
-        $uri = $this->resource;
+        $uri = implode("/", $this->resource);
         return $this->request('GET', $uri, [
             'query' => $search
         ]);
@@ -54,23 +88,24 @@ class Paylocity
 
     public function post(array $data = null)
     {
-        $uri = $this->resource;
+        // var_dump($this->encrypt($data));die();
+        $uri = implode("/", $this->resource);
         return $this->request('POST', $uri, [
-            "json" => $data
+            "body" => $this->encrypt($data)
         ]);
     }
 
-    public function put($id, array $data = null)
+    public function put(array $data = null)
     {
-        $uri = "{$this->resource}/{$id}";
+        $uri = implode("/", $this->resource);
         return $this->request('PUT', $uri, [
-            "json" => $data
+            "body" => $this->encrypt($data)
         ]);
     }
 
-    public function delete($id, array $data = null)
+    public function delete(array $data = null)
     {
-        $uri = "{$this->resource}/{$id}";
+        $uri = implode("/", $this->resource);
         return $this->request('DELETE', $uri, [
             "json" => $data
         ]);
@@ -78,6 +113,7 @@ class Paylocity
 
     protected function request($method, $uri, $options = [])
     {
+        $this->resource = [];
         try {
             return $this->transform($this->client->request($method, $uri, $options));
         } catch (BadResponseException $e) {
@@ -87,20 +123,26 @@ class Paylocity
 
     protected function transform(Response $response)
     {
-        return json_decode($response->getBody());
+        return $response;
+        return json_decode($response->getBody(true));
     }
 
     protected function handleBadResponseException($e)
     {
         try {
-            $r = $this->transform($e->getResponse());
-            $message = @$r->error->message;
-            $code = @$r->error->code;
+            $message = $e->getResponse()->getBody(true);
+            $code = 500;
         } catch (Exception $x) {
-            $message = "An error occurred";
+            $message = $x->getMessage();
             $code = 500;
         }
         
-        throw new ZenapplyException($message, $code, $e);
+        throw new Exception($message, $code, $e);
+    }
+
+    protected function encrypt(array $data)
+    {
+        $envelope = new SecureContent($data, $this->public_key_path);
+        return (string) $envelope;
     }
 }
