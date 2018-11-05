@@ -1,6 +1,6 @@
 {
     "name": "zenapply/php-paylocity",
-    "description": "API Wrapper for Zenapply",
+    "description": "Paylocity API Wrapper",
     "keywords": [
         "laravel",
         "zenapply"
