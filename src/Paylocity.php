@@ -2,7 +2,7 @@
 
 namespace Zenapply\HRIS\Paylocity;
 
-use Exception;
+use Exceptions\PaylocityException;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\BadResponseException;
 use GuzzleHttp\HandlerStack;
@@ -137,7 +137,7 @@ class Paylocity
             $code = 500;
         }
         
-        throw new Exception($message, $code, $e);
+        throw new PaylocityException($message, $code, $e);
     }
 
     protected function encrypt(array $data)

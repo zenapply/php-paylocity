@@ -2,6 +2,9 @@
 
 All notable changes to `zenapply/php-paylocity` will be documented in this file.
 
+### 1.1.0
+- Added PaylocityException
+
 ### 1.0.1
 - Removed unnecessary package
 
