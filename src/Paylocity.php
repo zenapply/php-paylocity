@@ -2,7 +2,7 @@
 
 namespace Zenapply\HRIS\Paylocity;
 
-use Exceptions\PaylocityException;
+use Zenapply\HRIS\Paylocity\Exceptions\PaylocityException;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\BadResponseException;
 use GuzzleHttp\HandlerStack;
