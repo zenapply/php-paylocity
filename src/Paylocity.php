@@ -123,7 +123,6 @@ class Paylocity
 
     protected function transform(Response $response)
     {
-        return $response;
         return json_decode($response->getBody(true));
     }
 
@@ -136,12 +135,12 @@ class Paylocity
                 $message = $message[0]->message;
             } 
 
-            $code = $response->getStatusCode();
+            $code = intval($response->getStatusCode());
         } catch (Exception $x) {
             $message = $x->getMessage();
             $code = 500;
         }
-        
+
         throw new PaylocityException($message, $code, $e);
     }
 
