@@ -130,8 +130,13 @@ class Paylocity
     protected function handleBadResponseException($e)
     {
         try {
-            $message = $e->getResponse()->getBody(true);
-            $code = 500;
+            $response = $e->getResponse();
+            $message = $this->transform($response);
+            if (is_array($message) && count($message) > 0) {
+                $message = $message[0]->message;
+            } 
+
+            $code = $response->getStatusCode();
         } catch (Exception $x) {
             $message = $x->getMessage();
             $code = 500;
