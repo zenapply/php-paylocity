@@ -2,6 +2,9 @@
 
 All notable changes to `zenapply/php-paylocity` will be documented in this file.
 
+### 1.2.0
+- Added DuplicateUsernameException;
+
 ### 1.1.3
 - Fixed Exceptions
 

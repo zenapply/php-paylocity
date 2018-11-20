@@ -3,6 +3,7 @@
 namespace Zenapply\HRIS\Paylocity;
 
 use Zenapply\HRIS\Paylocity\Exceptions\PaylocityException;
+use Zenapply\HRIS\Paylocity\Exceptions\DuplicateUsernameException;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\BadResponseException;
 use GuzzleHttp\HandlerStack;
@@ -128,17 +129,17 @@ class Paylocity
 
     protected function handleBadResponseException($e)
     {
-        try {
-            $response = $e->getResponse();
-            $message = $this->transform($response);
-            if (is_array($message) && count($message) > 0) {
-                $message = $message[0]->message;
-            } 
+        $response = $e->getResponse();
+        $code = intval($response->getStatusCode());
+        $data = $this->transform($response);
+        if (is_array($data) && count($data) > 0 && is_array($data[0]->errors) && count($data[0]->errors) > 0) {
+            $message = $data[0]->errors[0]->message;
+        } else {
+            $message = $e->getMessage();
+        }
 
-            $code = intval($response->getStatusCode());
-        } catch (Exception $x) {
-            $message = $x->getMessage();
-            $code = 500;
+        if (strpos($message, "A user with the username") >= 0 && strpos($message, "already exists") >= 0) {
+            throw new DuplicateUsernameException($message, $code, $e);
         }
 
         throw new PaylocityException($message, $code, $e);
