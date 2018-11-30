@@ -124,7 +124,7 @@ class Paylocity
 
     protected function transform(Response $response)
     {
-        return json_decode($response->getBody(true));
+        return json_decode($response->getBody(true)->getContents(), true);
     }
 
     protected function handleBadResponseException($e)
@@ -132,13 +132,13 @@ class Paylocity
         $response = $e->getResponse();
         $code = intval($response->getStatusCode());
         $data = $this->transform($response);
-        if (is_array($data) && count($data) > 0 && is_array($data[0]->errors) && count($data[0]->errors) > 0) {
-            $message = $data[0]->errors[0]->message;
+        if (isset($data["errors"][0]["message"])) {
+            $message = $data["errors"][0]["message"];
         } else {
             $message = $e->getMessage();
         }
 
-        if (strpos($message, "A user with the username") >= 0 && strpos($message, "already exists") >= 0) {
+        if (strpos($message, "A user with the username") !== false && strpos($message, "already exists") !== false) {
             throw new DuplicateUsernameException($message, $code, $e);
         }
 
