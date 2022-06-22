@@ -8,5 +8,9 @@ use Zenapply\HRIS\Paylocity\Paylocity;
 
 class PaylocityTest extends TestCase
 {
-
+    public function testIncomplete() {
+        $this->markTestIncomplete(
+            'This test has not been implemented yet.'
+          );
+    }
 }

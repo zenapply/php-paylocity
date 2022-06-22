@@ -1,27 +1,26 @@
 {
-    "name": "zenapply/php-paylocity",
+    "name": "packages/php-paylocity",
     "description": "Paylocity API Wrapper",
     "keywords": [
         "laravel",
         "zenapply"
     ],
     "homepage": "https://github.com/zenapply/php-paylocity",
-    "license": "MIT",  
+    "license": "MIT",
     "authors": [
         {
             "name": "Tyler Arbon",
-            "email": "tylercd100@gmail.com"
+            "email": "tyler@arbonwebsolutions.com"
         }
     ],
-    "autoload":{
-        "psr-4":{
-            "Zenapply\\HRIS\\Paylocity\\": "src/"
+    "autoload": {
+        "psr-4": {
+            "Zenapply\\HRIS\\Paylocity\\": "src/",
+            "Zenapply\\HRIS\\Paylocity\\Tests\\": "tests/"
         }
     },
     "autoload-dev": {
-        "psr-4": {
-            "Zenapply\\HRIS\\Paylocity\\Tests\\": "tests/"
-        }
+        "psr-4": {}
     },
     "minimum-stability": "stable",
     "require": {
@@ -34,6 +33,5 @@
         "phpunit/phpunit": "^4.0|^5.0|^6.3",
         "nesbot/carbon": "^2.4"
     },
-    "suggest": {
-    }
+    "suggest": {}
 }
